@@ -2,6 +2,7 @@ import os
 import requests
 import argparse
 import json
+import logging
 from sys import platform, argv
 import time
 import OneDrive
@@ -20,7 +21,7 @@ class ConfigurationReader:
     def __init__(self):
         confPath = self.getConfigurationPath()
         if os.path.isfile(confPath):
-            print("Configuration file exists.")
+            logging.debug("configuration file exists")
         else:
             defConf = {
                 "backupFolder":"ROM",
@@ -40,14 +41,12 @@ class ConfigurationReader:
         confPath = self.getConfigurationPath()
         if os.path.isfile(confPath):
             if os.access(confPath, os.R_OK | os.W_OK):
-                print("all ok")
+                logging.debug("file exists and We have permissions")
             else:
-                print("Nie masz pełnych praw RW do pliku %s"%(confPath))
-                print("Zmień uprawnienia na pliku.")
+                logging.warn("you haven't exact permissions %s"%(confPath))
                 return None
         else:
-            print("Brak pliku configuracji.")
-            print("Użyj %s configure"%(APP_NAME))
+            logging.info("file doesn't exist")
             return None
 
         with open(confPath, 'r') as f:
@@ -69,11 +68,23 @@ class Configuration:
        
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--log")
+    args = parser.parse_args()
+
+    log_level = getattr(logging, args.log.upper(), None)
+    if not isinstance(log_level, int):
+        raise ValueError("Invalid log level: %s"%(args.log))
+    logging.basicConfig(format="%(levelname)s:%(message)s", level=log_level)
+
+    logging.debug("starting the program")
     reader = ConfigurationReader()
     conf = reader.load()
+    logging.debug("configuration has been read")
     odconf = conf.get_one_drive_configuration()
-    
+    logging.debug("start authentication")
     auth = OneDrive.Authentication(odconf)
     auth.run_authentication()
+    logging.debug("authentication succedded")
 
 

@@ -3,6 +3,7 @@ import uuid
 import requests
 import webbrowser
 import json
+import logging
 from sys import platform
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from multiprocessing.pool import ThreadPool
@@ -25,12 +26,13 @@ class Authentication:
         elif platform == "win32" or platform == "win64":
             self.web = webbrowser.get('windows-default')
         else:
-            print("MicrosoftAuthentication.Authentication does not support %s"%(platform))
+            logging.critical("MicrosoftAuthentication.Authentication does not support %s"%(platform))
             exit(1)
 
     def run_http_server(self) -> HTTPServer:
         redirect_url = self.onedrive.get_registered_redirect_url()
         parts = urllib.parse.urlparse(redirect_url)
+        logging.debug("running server on localhost:%d"%(parts.port))
         address = ('',parts.port)
         httpd = HTTPServer(address, MicrosoftAuthenticationHandler)
         httpd.handle_request()
@@ -44,6 +46,7 @@ class Authentication:
         params = self.onedrive.get_auth_data(self.config.SCOPES, state)
         url = self.config.AUTH_URL + self.config.AUTH_ENDPOINT + "?" \
                 + urllib.parse.urlencode(params)
+        logging.debug("make POST request to: %s"%(url))
         self.web.open(url)
         return state
 
@@ -53,6 +56,7 @@ class Authentication:
         status = self.open_browser()
         data = asyncFun.get()
         code = data["code"]
+        logging.debug("received code %s"%(code))
         
         url = self.config.AUTH_URL + self.config.TOKEN_ENDPOINT
         body = self.onedrive.get_token_request_data(code[0])
@@ -61,7 +65,7 @@ class Authentication:
             
         token_data = json.loads(response.text)
         if "error" in token_data:
-            print("nieudane logowanie %s"%(token_data["error_description"]))
+            logging.error("nieudane logowanie %s"%(token_data["error_description"]))
             exit(1)
 
         self.onedrive.set_token(token_data["access_token"])
