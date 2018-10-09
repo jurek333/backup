@@ -29,7 +29,7 @@ class Authentication:
             logging.critical("MicrosoftAuthentication.Authentication does not support %s"%(platform))
             exit(1)
 
-    def run_http_server(self) -> HTTPServer:
+    def _run_http_server(self) -> HTTPServer:
         redirect_url = self.onedrive.get_registered_redirect_url()
         parts = urllib.parse.urlparse(redirect_url)
         logging.debug("running server on localhost:%d"%(parts.port))
@@ -41,7 +41,7 @@ class Authentication:
         queryData = urllib.parse.parse_qs(query.query)
         return queryData
 
-    def open_browser(self) -> str:
+    def _open_browser(self) -> str:
         state = str(uuid.uuid4())
         params = self.onedrive.get_auth_data(self.config.SCOPES, state)
         url = self.config.AUTH_URL + self.config.AUTH_ENDPOINT + "?" \
@@ -50,10 +50,10 @@ class Authentication:
         self.web.open(url)
         return state
 
-    def run_authentication(self):
+    def authenticate(self):
         pool = ThreadPool(processes=1)
-        asyncFun = pool.apply_async(self.run_http_server, ())
-        status = self.open_browser()
+        asyncFun = pool.apply_async(self._run_http_server, ())
+        status = self._open_browser()
         data = asyncFun.get()
         code = data["code"]
         logging.debug("received code %s"%(code))
@@ -61,7 +61,6 @@ class Authentication:
         url = self.config.AUTH_URL + self.config.TOKEN_ENDPOINT
         body = self.onedrive.get_token_request_data(code[0])
         response = requests.post(url, data=body)
-        print(response.text)
             
         token_data = json.loads(response.text)
         if "error" in token_data:
@@ -73,3 +72,18 @@ class Authentication:
         self.onedrive.set_token_type(token_data["token_type"])
 
         return self.onedrive.get_auth_header()
+
+#    def get_token(self):
+#        url = self.config.AUTH_URL + self.config.TOKEN_ENDPOINT
+#        body = self.onedrive.get_token_request_data(code[0])
+#        response = requests.post(url, data=body)
+#            
+#        token_data = json.loads(response.text)
+#        if "error" in token_data:
+#            logging.error("nieudane logowanie %s"%(token_data["error_description"]))
+#            exit(1)
+#
+#        self.onedrive.set_token(token_data["access_token"])
+#        self.onedrive.set_refresh_token(token_data["refresh_token"])
+#        self.onedrive.set_token_type(token_data["token_type"])
+
