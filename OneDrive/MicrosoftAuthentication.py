@@ -50,7 +50,43 @@ class Authentication:
         self.web.open(url)
         return state
 
-    def authenticate(self):
+    def get_authentication_header(self):
+        token = self.onedrive.get_token()
+        if token is None:
+            return self._make_whole_auth()
+        return self.onedrive.get_auth_header()
+        
+    def authentication_error(self):
+        if self._refresh_token():                    #if it fails try to refresh token
+            return self.onedrive.get_auth_header()
+        if self._make_whole_auth():
+            return self.onedrive.get_auth_header()
+        return None
+
+    def _save_token_data(self, http_response):
+        self.onedrive.set_token(http_response["access_token"])
+        self.onedrive.set_refresh_token(http_response["refresh_token"])
+        self.onedrive.set_token_type(http_response["token_type"])
+
+    def _refresh_token(self) -> bool:
+        logging.debug("zostanie przprowadzone odświeżenie tokenu")
+        refresh_token = self.onedrive.get_refresh_token()
+        if refresh_token is None or refresh_token == "":
+            return False
+        url = self.config.AUTH_URL + self.config.TOKEN_ENDPOINT
+        body = self.onedrive.get_refresh_token_request_data()
+        print(body)
+        response = requests.post(url, data=body)
+            
+        token_data = json.loads(response.text)
+        if "error" in token_data:
+            logging.error("nieudane logowanie %s"%(token_data["error_description"]))
+            return False
+        self._save_token_data(token_data)
+        return True
+
+    def _make_whole_auth(self):
+        logging.debug("zostanie przeprowadzona autoryzacja")
         pool = ThreadPool(processes=1)
         asyncFun = pool.apply_async(self._run_http_server, ())
         status = self._open_browser()
@@ -66,24 +102,5 @@ class Authentication:
         if "error" in token_data:
             logging.error("nieudane logowanie %s"%(token_data["error_description"]))
             exit(1)
-
-        self.onedrive.set_token(token_data["access_token"])
-        self.onedrive.set_refresh_token(token_data["refresh_token"])
-        self.onedrive.set_token_type(token_data["token_type"])
-
+        self._save_token_data(token_data)
         return self.onedrive.get_auth_header()
-
-#    def get_token(self):
-#        url = self.config.AUTH_URL + self.config.TOKEN_ENDPOINT
-#        body = self.onedrive.get_token_request_data(code[0])
-#        response = requests.post(url, data=body)
-#            
-#        token_data = json.loads(response.text)
-#        if "error" in token_data:
-#            logging.error("nieudane logowanie %s"%(token_data["error_description"]))
-#            exit(1)
-#
-#        self.onedrive.set_token(token_data["access_token"])
-#        self.onedrive.set_refresh_token(token_data["refresh_token"])
-#        self.onedrive.set_token_type(token_data["token_type"])
-

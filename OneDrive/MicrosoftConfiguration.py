@@ -31,6 +31,15 @@ class OneDriveConfiguration:
         }
         return data
 
+    def get_refresh_token_request_data(self):
+        data = {
+            'client_id': self.get_client_id(),
+            'refresh_token': self.get_refresh_token(),
+            'grant_type': 'refresh_token',
+            'client_secret': self.get_client_secret()
+        }
+        return data
+
     def get_token(self):
         if 'token' in self.data:
             return self.data['token']

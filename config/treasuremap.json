@@ -1,0 +1,32 @@
+{
+    "aliases": {
+
+    },
+    "map": [
+        {
+            "alias": "book",
+            "path": "books",
+            "children": [
+                {
+                    "alias": "novel",
+                    "path": "novel",
+                    "children": []
+                },{
+                    "alias": "techbooks",
+                    "path": "tech",
+                    "children": []
+                }
+            ]
+        }, 
+        {
+            "alias": "apps",
+            "path": "programs",
+            "children": []
+        },
+        {
+            "alias": "project",
+            "path": "projects",
+            "children": []
+        }
+    ]
+}

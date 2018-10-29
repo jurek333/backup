@@ -10,10 +10,12 @@ class OneDriveStorage(BaseStorage.Driver):
 
     def __init__(self, configuration: BaseStorage.ProgramConfiguration):
         self.urls = OneDrive.MicrosoftConfiguration()
-        auth = OneDrive.Authentication(self.get_one_drive_configuration(configuration))
-        token = auth.authenticate()
-        self.header = {"Authorization": token}
-        configuration.update_file()
+        self.resource_url = self.urls.RESOURCE + "/v1.0/me/drive/root"
+        self.config = configuration
+        self.auth = OneDrive.Authentication(self.get_one_drive_configuration(self.config))
+        self.header = {"Authorization": self.auth.get_authentication_header()}
+        
+        self.config.update_file()
     
     def get_one_drive_configuration(self, config):
         if "one_drive" in config.data:
@@ -27,8 +29,19 @@ class OneDriveStorage(BaseStorage.Driver):
         print(json.dumps(dir_list, indent=4))
         return dir_list
 
+    def load_file(self, path):
+        url = self.resource_url +":"+ path
+        resp = requests.get(url, headers = self.header)
+        if resp.status_code == 401:
+            self.header = {"Authorization": self.auth.authentication_error()}
+            self.config.update_file()
+            resp = requests.get(url, headers = self.header)
+        data = resp.json()
+        print(json.dumps(data, indent=4))
+        return data
+
     def create_folder(self, name, path=""):
-        url = self.urls.RESOURCE + "/v1.0/me/drive/root" + path + "/children"
+        url = self.resource_url + path + "/children"
         body = {
             "name":name,
             "folder": {},
