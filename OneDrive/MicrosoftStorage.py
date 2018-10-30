@@ -14,9 +14,9 @@ class OneDriveStorage(BaseStorage.Driver):
         self.config = configuration
         self.auth = OneDrive.Authentication(self.get_one_drive_configuration(self.config))
         self.header = {"Authorization": self.auth.get_authentication_header()}
-        
+
         self.config.update_file()
-    
+
     def get_one_drive_configuration(self, config):
         if "one_drive" in config.data:
             return OneDrive.OneDriveConfiguration(config.data["one_drive"])
@@ -30,8 +30,9 @@ class OneDriveStorage(BaseStorage.Driver):
         return dir_list
 
     def load_file(self, path):
-        url = self.resource_url +":"+ path
+        url = self.resource_url +":"+ path + ":/content"
         resp = requests.get(url, headers = self.header)
+        logging.info(url)
         if resp.status_code == 401:
             self.header = {"Authorization": self.auth.authentication_error()}
             self.config.update_file()

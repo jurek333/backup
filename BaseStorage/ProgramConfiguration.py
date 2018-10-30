@@ -10,12 +10,12 @@ class ProgramConfiguration:
     def load(self):
         if os.path.isfile(self.configuration_file_path):
             if os.access(self.configuration_file_path, os.R_OK | os.W_OK):
-                logging.debug("file exists and We have permissions")
+                logging.debug("[Conf] load file")
             else:
-                logging.warn("you haven't exact permissions %s"%(self.configuration_file_path))
+                logging.warn("[Conf] you haven't exact permissions %s"%(self.configuration_file_path))
                 return None
         else:
-            logging.info("file doesn't exist")
+            logging.info("[Conf] file doesn't exist")
             return None
 
         with open(self.configuration_file_path, 'r') as f:
@@ -27,12 +27,12 @@ class ProgramConfiguration:
     def update_file(self):
         if os.path.isfile(self.configuration_file_path):
             if os.access(self.configuration_file_path, os.R_OK | os.W_OK):
-                logging.debug("file exists and We have permissions")
+                logging.debug("[Conf] update file")
             else:
-                logging.warn("you haven't exact permissions %s"%(self.configuration_file_path))
+                logging.warn("[Conf] you haven't exact permissions %s"%(self.configuration_file_path))
                 return False
         else:
-            logging.info("file doesn't exist")
+            logging.info("[Conf] file doesn't exist")
             return False
 
         with open(self.configuration_file_path, 'w') as f:

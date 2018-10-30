@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+from pathlib import PurePath
 import requests
 import argparse
 import json
@@ -19,7 +19,7 @@ class ConfigurationReader:
             return os.getenv("USERPROFILE") + "\\_backuprc"
         else:
             return None
-            
+
 class Backuper:
     def __init__(self, driver: BaseStorage.Driver):
         self.root_folder = "RAM"
@@ -42,9 +42,9 @@ class Backuper:
         return is_file or is_dir
 
     def load_mapping(self):
-        map_path = Path(self.root_folder) / self.map_file_name
-        logging.debug("[Conf] ładuję plik mapowania: %s"%(map_path.stem))
-        map_file_content = self.storage.load_file(map_path.stem)
+        map_path = PurePath("/") / self.root_folder / self.map_file_name
+        logging.debug("[Conf] ładuję plik mapowania: %s"%(str(map_path)))
+        map_file_content = self.storage.load_file(str(map_path))
         return map_file_content
 
     def backup(self, target, labels):
@@ -97,6 +97,6 @@ if __name__ == "__main__":
     # do backup job
     result = backup.backup(target, labels)
     if result == False:
-        logging.error("Fail to store %s"%(target))        
-    
+        logging.error("Fail to store %s"%(target))
+
     logging.info("The target: %s was stored and labeled: %s"%(target, labels))
