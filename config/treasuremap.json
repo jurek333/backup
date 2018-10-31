@@ -1,32 +1,32 @@
 {
     "aliases": {
-
+        "books":["book"],
+        "book":["book"],
+        "novel":["novel"],
+        "novels":["novel"],
+        "techbooks":["techbook"],
+        "technical":["techbook"],
+        "apps":["app"],
+        "app":["app"],
+        "program":["app"],
+        "project":["project"],
+        "projects":["projects"]
     },
-    "map": [
-        {
-            "alias": "book",
-            "path": "books",
-            "children": [
-                {
-                    "alias": "novel",
-                    "path": "novel",
-                    "children": []
-                },{
-                    "alias": "techbooks",
-                    "path": "tech",
-                    "children": []
-                }
-            ]
-        }, 
-        {
-            "alias": "apps",
-            "path": "programs",
-            "children": []
+    "map": {
+        "book" : {
+            "path": "books"
         },
-        {
-            "alias": "project",
-            "path": "projects",
-            "children": []
+        "novel": {
+            "path": "books/novel"
+        },
+        "techbook": {
+            "path": "books/tech"
+        },
+        "app": {
+            "path": "programs"
+        },
+        "project":{
+            "path": "projects"
         }
-    ]
+    }
 }

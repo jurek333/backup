@@ -1,5 +1,5 @@
 import os
-from pathlib import PurePath
+from pathlib import Path
 import requests
 import argparse
 import json
@@ -34,29 +34,48 @@ class Backuper:
         f = self.storage.create_folder(self.storage.root_folder)
         return f
 
-    def check_target(self, target) -> bool:
-        is_dir = False
-        is_file = os.path.isfile(target)
-        if is_file == False:
-            is_dir = os.path.isdir(target)
+    def check_target(self, target:Path) -> bool:
+        #is_dir = False
+        #is_file = os.path.isfile(target)
+        is_dir = target.is_dir()
+        is_file = target.exists()
+       # if is_file == False:
+       #     is_dir = os.path.isdir(target)
         return is_file or is_dir
 
     def load_mapping(self):
-        map_path = PurePath("/") / self.root_folder / self.map_file_name
-        logging.debug("[Conf] ładuję plik mapowania: %s"%(str(map_path)))
-        map_file_content = self.storage.load_file(str(map_path))
+        map_path = Path("/") / self.root_folder / self.map_file_name
+        logging.debug("[Conf] ładuję plik mapowania: %s"%(map_path.as_posix()))
+        map_file_content = self.storage.load_file(map_path)
         return map_file_content
 
     def backup(self, target, labels):
-        print("In the future I will save %s under %s"%(target, labels))
         # 0. check if target exists
         if False == self.check_target(target):
             return (False, "{} doesn't exists - check target".format(target))
         # 1. get mapping
         mapping = self.load_mapping()
+        if "map" not in mapping:
+            return (False, "configuration file is missing map section")
+        keys = []
+        paths = [];
         # 2. find paths
+        if "aliases" in mapping:
+            for label in labels:
+                keys.extend(mapping["aliases"][label])
+        else:
+            keys = labels
+        logging.debug("[B] aliases: {}".format(keys))
+        for key in keys:
+            p = Path('/') / self.root_folder / mapping["map"][key]["path"]
+            paths.append(p)
+        logging.debug("[B] paths: {}".format(paths))
+        if len(paths)==0:
+            return (False, "none of labels {} has mapped path to it".format(labels))
+
         # 3. save files
-        # 4. 
+        for path in paths:
+            self.storage.save(path, target)
         return (True,"")
 
 def get_args():
@@ -68,7 +87,7 @@ def get_args():
             , default="INFO"
             , choices=["DEBUG","INFO","WARN","ERROR"])
     args = parser.parse_args()
-    return (args.file, args.labels, args.log)
+    return (Path(args.file), args.labels, args.log)
 
 def set_logging(log_level):
     numeric_level = getattr(logging, log_level.upper(), None)
@@ -95,8 +114,8 @@ if __name__ == "__main__":
     # pass it to buckuper
     backup = Backuper(driver)
     # do backup job
-    result = backup.backup(target, labels)
+    result, errormsg = backup.backup(target, labels)
     if result == False:
-        logging.error("Fail to store %s"%(target))
+        logging.error("Fail to store %s: %s"%(target, errormsg))
 
     logging.info("The target: %s was stored and labeled: %s"%(target, labels))

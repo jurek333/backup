@@ -30,16 +30,27 @@ class OneDriveStorage(BaseStorage.Driver):
         return dir_list
 
     def load_file(self, path):
-        url = self.resource_url +":"+ path + ":/content"
+        url = self.resource_url +":"+ path.as_posix() + ":/content"
         resp = requests.get(url, headers = self.header)
-        logging.info(url)
+        logging.debug("[OD] load file from {} with status code {}".format(url, resp.status_code))
         if resp.status_code == 401:
             self.header = {"Authorization": self.auth.authentication_error()}
             self.config.update_file()
             resp = requests.get(url, headers = self.header)
+            logging.debug("[OD] load file from {} with status code {}".format(url, resp.status_code))
         data = resp.json()
-        print(json.dumps(data, indent=4))
         return data
+
+    def save(self, path, trg):
+        url = self.resource_url + ":" + (path / trg.name).as_posix() + ":/content"
+        with trg.open() as f:
+            body = f.read()
+        resp = requests.put(url, data=body, headers = self.header)
+        logging.debug("save under {} returned {}".format(url,resp.status_code))
+        if resp.status_code == 401:
+            self.header = {"Authorization": self.auth.authentication_error()}
+            self.config.update_file()
+            resp = requests.put(url, headers = self.header)
 
     def create_folder(self, name, path=""):
         url = self.resource_url + path + "/children"
