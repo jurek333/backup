@@ -2,6 +2,7 @@
     "aliases": {
         "books":["book"],
         "book":["book"],
+        "backupconfig":["backup_config"],
         "novel":["novel"],
         "novels":["novel"],
         "techbooks":["techbook"],
@@ -16,14 +17,35 @@
         "book" : {
             "path": "books"
         },
+        "chessbook" : {
+            "path": "books/chess"
+        },
+        "backupconfig": {
+            "path": ""
+        },
         "novel": {
             "path": "books/novel"
         },
         "techbook": {
             "path": "books/tech"
         },
+        "devbook": {
+            "path": "books/tech/dev"
+        },
+        "cppbook": { 
+            "path": "books/tech/dev/cpp"
+        },
+        "linuxbook": {
+            "path": "books/tech/dev/linux"
+        },
         "app": {
             "path": "programs"
+        },
+        "devapp": {
+            "path": "programs/dev"
+        },
+        "system":{
+            "path": "programs/systems"
         },
         "project":{
             "path": "projects"

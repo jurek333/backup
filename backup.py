@@ -35,12 +35,8 @@ class Backuper:
         return f
 
     def check_target(self, target:Path) -> bool:
-        #is_dir = False
-        #is_file = os.path.isfile(target)
         is_dir = target.is_dir()
         is_file = target.exists()
-       # if is_file == False:
-       #     is_dir = os.path.isdir(target)
         return is_file or is_dir
 
     def load_mapping(self):
@@ -62,7 +58,11 @@ class Backuper:
         # 2. find paths
         if "aliases" in mapping:
             for label in labels:
-                keys.extend(mapping["aliases"][label])
+                k = mapping["aliases"][label]
+                if k is None:
+                    keys.append(label)
+                else:
+                    keys.extend(k)
         else:
             keys = labels
         logging.debug("[B] aliases: {}".format(keys))
@@ -74,9 +74,10 @@ class Backuper:
             return (False, "none of labels {} has mapped path to it".format(labels))
 
         # 3. save files
+        result = True
         for path in paths:
-            self.storage.save(path, target)
-        return (True,"")
+            result = result and self.storage.save(path, target)
+        return (result,"")
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -117,5 +118,6 @@ if __name__ == "__main__":
     result, errormsg = backup.backup(target, labels)
     if result == False:
         logging.error("Fail to store %s: %s"%(target, errormsg))
+    else:
+        logging.info("The target: %s was stored and labeled: %s"%(target, labels))
 
-    logging.info("The target: %s was stored and labeled: %s"%(target, labels))
