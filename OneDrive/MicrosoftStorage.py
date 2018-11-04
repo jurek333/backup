@@ -25,11 +25,11 @@ class OneDriveStorage(BaseStorage.Driver):
         if include_auth:
             hdr = self.header
         resp = requests.get(url, headers=hdr)
-        if resp.status_code == 401:
+        if resp.status_code == requests.codes.unauthorized: #401:
             self.header = {"Authorization": self.auth.authentication_error()}
             self.config.update_file()
             resp = requests.get(url, headers = hdr)
-        if resp.status_code == 404:
+        if resp.status_code == requests.codes.not_found: #404:
             return None
         data = resp.json()
         return data
@@ -39,24 +39,11 @@ class OneDriveStorage(BaseStorage.Driver):
         if include_auth:
             hdr = self.header
         resp = requests.post(url, data=body, headers=hdr)
-        if resp.status_code == 401:
+        if resp.status_code == requests.codes.unauthorized: #401:
             self.header = {"Authorization": self.auth.authentication_error()}
             self.config.update_file()
             resp = requests.put(url, data=body, headers = hdr)
-        if resp.status_code == 200:
-            return resp.json()
-        return None
-
-    def make_put(self, url:str, body:object, include_auth = True) -> bool:
-        hdr = {}
-        if include_auth:
-            hdr = self.header
-        resp = requests.put(url, data=body, headers=hdr)
-        if resp.status_code == 401 and include_auth:
-            self.header = {"Authorization": self.auth.authentication_error()}
-            self.config.update_file()
-            resp = requests.put(url, data=body, headers=hdr)
-        if resp.status_code == 201:
+        if resp.status_code == requests.codes.ok: #200:
             return resp.json()
         return None
 
@@ -65,11 +52,6 @@ class OneDriveStorage(BaseStorage.Driver):
             return OneDrive.OneDriveConfiguration(config.data["one_drive"])
         else:
             return None
-
-    def get_root_folders(self):
-        url = self.urls.RESOURCE + "/v1.0/me/drive/root/children"
-        dir_list = self.make_get(url)
-        return dir_list
 
     def get_file_info(self, path: Path):
         url = self.resource_url + ":"+ path.as_posix()
@@ -80,7 +62,7 @@ class OneDriveStorage(BaseStorage.Driver):
         url = self.resource_url +":"+ path.as_posix() + ":/content"
         resp = requests.get(url, headers = self.header)
         logging.debug("[OD] load file from {} with status code {}".format(url, resp.status_code))
-        if resp.status_code == 401:
+        if resp.status_code == requests.codes.unauthorized: #401:
             self.header = {"Authorization": self.auth.authentication_error()}
             self.config.update_file()
             resp = requests.get(url, headers = self.header)
@@ -107,10 +89,10 @@ class OneDriveStorage(BaseStorage.Driver):
                 }
                 logging.debug("headers: {}".format(hdr))
                 resp = requests.put(upload_url, data=body, headers=hdr)
-                if resp.status_code == 201 or resp.status_code == 200:
+                if resp.status_code == requests.codes.created or resp.status_code == requests.codes.ok:
                     logging.debug("[OD] file was uploaded!")
                     return True
-                if resp.status_code != 202:
+                if resp.status_code != requests.codes.accepted:
                     logging.error("[Error] sending file failed: {}".format(resp.text))
                     return False
                 start += size
@@ -131,21 +113,21 @@ class OneDriveStorage(BaseStorage.Driver):
                 if choose == 'N' or choose == 'n':
                     return False;
         return self.upload_file(webPath, trg)
-        #url = self.resource_url + ":" + webPath.as_posix() + ":/content"
-        #with trg.open("rb") as f:
-            #body = f.read()
-        #resp = self.make_put(url, body)
-        #return True
+
+    def get_root_folders(self):
+        url = self.urls.RESOURCE + "/v1.0/me/drive/root/children"
+        dir_list = self.make_get(url)
+        return dir_list
 
     def create_folder(self, name, path=""):
         url = self.resource_url + path + "/children"
         body = {
-            "name":name,
+            "name": name,
             "folder": {},
             "@microsoft.graph.conflictBehavior": "rename"
         }
         resp = requests.post(url, json=body, headers = self.header)
-        if resp.status_code != 201:
+        if resp.status_code != requests.codes.created: # 201:
             logging.error("Creating main folder failed")
             logging.debug(resp)
             return None
