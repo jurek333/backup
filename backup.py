@@ -58,11 +58,11 @@ class Backuper:
         # 2. find paths
         if "aliases" in mapping:
             for label in labels:
-                k = mapping["aliases"][label]
-                if k is None:
-                    keys.append(label)
-                else:
+                if label in mapping["aliases"]:
+                    k = mapping["aliases"][label]
                     keys.extend(k)
+                else:
+                    keys.append(label)
         else:
             keys = labels
         logging.debug("[B] aliases: {}".format(keys))

@@ -16,34 +16,49 @@ class OneDriveStorage(BaseStorage.Driver):
         self.config = configuration
         self.auth = OneDrive.Authentication(self.get_one_drive_configuration(self.config))
         self.header = {"Authorization": self.auth.get_authentication_header()}
+        self.chunk_size = 4*320*1026
 
         self.config.update_file()
 
-    def make_get(self, url: str):
-        resp = requests.get(url, headers=self.header)
-        logging.debug("[OneDrive] the GET request to {} finished with status code {}."
-            .format(url, resp.status_code))
+    def make_get(self, url: str, include_auth = True):
+        hdr = {}
+        if include_auth:
+            hdr = self.header
+        resp = requests.get(url, headers=hdr)
         if resp.status_code == 401:
             self.header = {"Authorization": self.auth.authentication_error()}
             self.config.update_file()
-            resp = requests.get(url, headers = self.header)
-            logging.debug("[OneDrive] the GET request to {} finished with status code {}."
-                .format(url, resp.status_code))
+            resp = requests.get(url, headers = hdr)
         if resp.status_code == 404:
             return None
         data = resp.json()
         return data
 
-    def make_put(self, url:str, body:object):
-        resp = requests.put(url, data=body, headers = self.header)
-        logging.debug("[OneDrive] the PUT request to {} finished with status code {}"
-                .format(url,resp.status_code))
+    def make_post(self, url:str, body: object, include_auth = True) -> bool:
+        hdr = {}
+        if include_auth:
+            hdr = self.header
+        resp = requests.post(url, data=body, headers=hdr)
         if resp.status_code == 401:
             self.header = {"Authorization": self.auth.authentication_error()}
             self.config.update_file()
-            resp = requests.put(url, data=body, headers = self.header)
-            logging.debug("[OneDrive] the PUT request to {} finished with status code {}"
-                    .format(url,resp.status_code))
+            resp = requests.put(url, data=body, headers = hdr)
+        if resp.status_code == 200:
+            return resp.json()
+        return None
+
+    def make_put(self, url:str, body:object, include_auth = True) -> bool:
+        hdr = {}
+        if include_auth:
+            hdr = self.header
+        resp = requests.put(url, data=body, headers=hdr)
+        if resp.status_code == 401 and include_auth:
+            self.header = {"Authorization": self.auth.authentication_error()}
+            self.config.update_file()
+            resp = requests.put(url, data=body, headers=hdr)
+        if resp.status_code == 201:
+            return resp.json()
+        return None
 
     def get_one_drive_configuration(self, config):
         if "one_drive" in config.data:
@@ -73,6 +88,34 @@ class OneDriveStorage(BaseStorage.Driver):
         data = resp.json()
         return data
 
+    def upload_file(self, path, trg)->bool:
+        file_size = trg.stat().st_size
+        start = 0
+        url = self.resource_url + ":" +  path.as_posix() + ":/createUploadSession"
+        session = self.make_post(url, None)
+        upload_url = session["uploadUrl"]
+        with trg.open("rb") as f:
+            while True:
+                body = f.read(self.chunk_size)
+                size = len(body)
+                if size == 0:
+                    logging.error("End of file was reached but no success so far from OneDrive.")
+                    return False
+                hdr = {
+                    "Content-Range":"bytes {}-{}/{}".format(start,start+size-1,file_size),
+                    "Content-Length":"{}".format(size)
+                }
+                logging.debug("headers: {}".format(hdr))
+                resp = requests.put(upload_url, data=body, headers=hdr)
+                if resp.status_code == 201 or resp.status_code == 200:
+                    logging.debug("[OD] file was uploaded!")
+                    return True
+                if resp.status_code != 202:
+                    logging.error("[Error] sending file failed: {}".format(resp.text))
+                    return False
+                start += size
+        return True
+
     def save(self, path, trg) -> bool:
         webPath = (path / trg.name)
         file_info = self.get_file_info(webPath)
@@ -87,11 +130,12 @@ class OneDriveStorage(BaseStorage.Driver):
             else:
                 if choose == 'N' or choose == 'n':
                     return False;
-        url = self.resource_url + ":" + webPath.as_posix() + ":/content"
-        with trg.open("rb") as f:
-            body = f.read()
-        resp = self.make_put(url, body)
-        return True
+        return self.upload_file(webPath, trg)
+        #url = self.resource_url + ":" + webPath.as_posix() + ":/content"
+        #with trg.open("rb") as f:
+            #body = f.read()
+        #resp = self.make_put(url, body)
+        #return True
 
     def create_folder(self, name, path=""):
         url = self.resource_url + path + "/children"

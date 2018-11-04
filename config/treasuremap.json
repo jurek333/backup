@@ -22,6 +22,8 @@
         "c++":["cppbook"],
         "c":["cppbook"],
         "c#":["cppbook"],
+        "python":["pythonbook"],
+        "py":["pythonbook"],
         "security":["securitybook"],
         "graphic":["3d"],
         "grafika":["3d"]
@@ -48,6 +50,9 @@
         "devbook": {
             "path": "books/tech/dev"
         },
+        "re": {
+            "path": "books/tech/dev/re"
+        },
         "3d": { 
             "path": "books/tech/dev/graphic"
         },
@@ -56,6 +61,9 @@
         },
         "iotbook": { 
             "path": "books/tech/dev/iot"
+        },
+        "pythonbook": { 
+            "path": "books/tech/dev/python"
         },
         "cppbook": { 
             "path": "books/tech/dev/cpp"
