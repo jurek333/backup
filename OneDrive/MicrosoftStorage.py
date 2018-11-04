@@ -29,6 +29,8 @@ class OneDriveStorage(BaseStorage.Driver):
             resp = requests.get(url, headers = self.header)
             logging.debug("[OneDrive] the GET request to {} finished with status code {}."
                 .format(url, resp.status_code))
+        if resp.status_code == 404:
+            return None
         data = resp.json()
         return data
 
@@ -42,7 +44,6 @@ class OneDriveStorage(BaseStorage.Driver):
             resp = requests.put(url, data=body, headers = self.header)
             logging.debug("[OneDrive] the PUT request to {} finished with status code {}"
                     .format(url,resp.status_code))
-
 
     def get_one_drive_configuration(self, config):
         if "one_drive" in config.data:
@@ -87,7 +88,7 @@ class OneDriveStorage(BaseStorage.Driver):
                 if choose == 'N' or choose == 'n':
                     return False;
         url = self.resource_url + ":" + webPath.as_posix() + ":/content"
-        with trg.open() as f:
+        with trg.open("rb") as f:
             body = f.read()
         resp = self.make_put(url, body)
         return True

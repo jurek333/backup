@@ -2,16 +2,29 @@
     "aliases": {
         "books":["book"],
         "book":["book"],
-        "backupconfig":["backup_config"],
+        "backup_config":["backupconfig"],
+		"configuration":["backupconfig"],
         "novel":["novel"],
         "novels":["novel"],
+        "devnovel":["devnovel"],
         "techbooks":["techbook"],
         "technical":["techbook"],
         "apps":["app"],
         "app":["app"],
         "program":["app"],
         "project":["project"],
-        "projects":["projects"]
+        "projects":["projects"],
+        "iot":["iotbook"],
+        "avr":["iotbook"],
+        "arm":["iotbook"],
+        "dev":["devbook"],
+        "cpp":["cppbook"],
+        "c++":["cppbook"],
+        "c":["cppbook"],
+        "c#":["cppbook"],
+        "security":["securitybook"],
+        "graphic":["3d"],
+        "grafika":["3d"]
     },
     "map": {
         "book" : {
@@ -26,11 +39,23 @@
         "novel": {
             "path": "books/novel"
         },
+        "devnovel": {
+            "path": "books/novel/dev"
+        },
         "techbook": {
             "path": "books/tech"
         },
         "devbook": {
             "path": "books/tech/dev"
+        },
+        "3d": { 
+            "path": "books/tech/dev/graphic"
+        },
+        "securitybook": { 
+            "path": "books/tech/dev/security"
+        },
+        "iotbook": { 
+            "path": "books/tech/dev/iot"
         },
         "cppbook": { 
             "path": "books/tech/dev/cpp"

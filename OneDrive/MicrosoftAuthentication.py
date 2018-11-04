@@ -55,7 +55,7 @@ class Authentication:
         if token is None:
             return self._make_whole_auth()
         return self.onedrive.get_auth_header()
-        
+
     def authentication_error(self):
         if self._refresh_token():                    #if it fails try to refresh token
             return self.onedrive.get_auth_header()
@@ -75,9 +75,7 @@ class Authentication:
             return False
         url = self.config.AUTH_URL + self.config.TOKEN_ENDPOINT
         body = self.onedrive.get_refresh_token_request_data()
-        print(body)
         response = requests.post(url, data=body)
-            
         token_data = json.loads(response.text)
         if "error" in token_data:
             logging.error("nieudane logowanie %s"%(token_data["error_description"]))
