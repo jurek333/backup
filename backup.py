@@ -1,6 +1,4 @@
-from pathlib import Path
 import argparse
-import json
 import logging
 from ConfigurationReader import ConfigurationReader
 from Backuper import Backuper
@@ -16,7 +14,7 @@ def get_args():
             , default="INFO"
             , choices=["DEBUG","INFO","WARN","ERROR"])
     args = parser.parse_args()
-    return (Path(args.file), args.labels, args.log)
+    return (args.file, args.labels, args.log)
 
 def set_logging(log_level):
     numeric_level = getattr(logging, log_level.upper(), None)
@@ -24,7 +22,7 @@ def set_logging(log_level):
         raise ValueError("Invalid log level: %s"%(log_level))
     logging.basicConfig(format="%(message)s", level=numeric_level)
 
-if __name__ == "__main__":
+def main():
     # read arguments
     target, labels, log_level = get_args()
     set_logging(log_level)
@@ -48,3 +46,6 @@ if __name__ == "__main__":
         logging.error("Fail to store %s: %s"%(target, errormsg))
     else:
         logging.info("The target: %s was stored and labeled: %s"%(target, labels))
+
+if __name__ == "__main__":
+    main()

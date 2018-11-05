@@ -91,11 +91,11 @@ class Authentication:
         data = asyncFun.get()
         code = data["code"]
         logging.debug("received code %s"%(code))
-        
+
         url = self.config.AUTH_URL + self.config.TOKEN_ENDPOINT
         body = self.onedrive.get_token_request_data(code[0])
         response = requests.post(url, data=body)
-            
+
         token_data = json.loads(response.text)
         if "error" in token_data:
             logging.error("nieudane logowanie %s"%(token_data["error_description"]))
