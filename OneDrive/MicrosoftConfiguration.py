@@ -9,7 +9,7 @@ class MicrosoftConfiguration:
 class OneDriveConfiguration:
     def __init__(self, data):
        self.data = data
-    
+
     def get_auth_data(self, scopes, state):
         data = {
             'client_id':  self.get_client_id(),
@@ -65,9 +65,8 @@ class OneDriveConfiguration:
             return None
 
     def set_token_type(self, ttype):
-        self.data["token_type"] = ttype 
-            
-        
+        self.data["token_type"] = ttype
+
     def get_client_id(self):
         if "client_id" in self.data:
             return self.data["client_id"]
@@ -77,6 +76,18 @@ class OneDriveConfiguration:
     def get_client_secret(self):
         if "client_secret" in self.data:
             return self.data["client_secret"]
+        else:
+            return None
+
+    def get_root_folder(self):
+        if "root_folder" in self.data:
+            return self.data["root_folder"]
+        else:
+            return None
+
+    def get_configuration_file_name():
+        if "configuration_name" in self.data:
+            return self.data["configuration_name"]
         else:
             return None
 
